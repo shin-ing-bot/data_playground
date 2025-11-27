@@ -1,0 +1,34 @@
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(stringr)
+install.packages("readr")
+install.packages("stringr")
+library(readr)
+library(stringr)
+data <- read_csv("D:\information\shelter.csv")
+data <- read_csv("D:\\information\\shelter\\shelter_open.csv")
+data <- read.csv("D:/information/shelter/shelter_open.csv", 
+                 fileEncoding = "euc-kr", 
+                 stringsAsFactors = FALSE)
+data <- data %>%
+  mutate(운영시간 = ifelse(is.na(운영시간), "기타", 운영시간))
+data <- data %>%
+  mutate(시작시간 = ifelse(str_detect(운영시간, "24"), 0,
+                       as.numeric(str_extract(운영시간, "^\\d+"))))
+data <- data %>%
+  mutate(시간대 = case_when(
+    운영시간 == "기타" ~ "기타",
+    str_detect(운영시간, "24") ~ "24시간",
+    시작시간 < 6 ~ "심야",
+    시작시간 < 12 ~ "오전",
+    시작시간 < 18 ~ "오후",
+    TRUE ~ "저녁"
+  ))
+ggplot(data, aes(x = 시간대, fill = 시간대)) +
+  geom_bar() +
+  labs(title = "공중화장실 운영 시간대 분포",
+       x = "시간대", y = "화장실 수") +
+  scale_fill_brewer(palette = "Pastel1") +
+  theme_minimal()
+theme(text = element_text(size = 14))
